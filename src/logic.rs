@@ -7,6 +7,7 @@ use std::fs;
 pub fn process_video(
     infile: String,
     outfile: String,
+    scriptfile: String,
     work_dir: String,
     indir: String,
     outdir: String,
@@ -45,8 +46,14 @@ pub fn process_video(
     let mut full_indir = work_dir.clone();
     full_indir.push_str(&indir);
 
+    let script: String = fs::read_to_string(scriptfile).unwrap();
 
-    let controller = ControllerState::new(full_indir.clone(), full_outdir.clone(), converter.frames);
+    let controller = ControllerState::new(
+        full_indir.clone(), 
+        full_outdir.clone(), 
+        script.clone(), 
+        converter.frames
+    );
 
     let threads_available = thread::available_parallelism().unwrap();
 

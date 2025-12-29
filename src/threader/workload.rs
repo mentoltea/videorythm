@@ -11,6 +11,7 @@ pub fn thread_task(state: &mut ThreadState) -> () {
                 open_edit_save(
                     state.controller.indir.clone(), 
                     state.controller.outdir.clone(), 
+                    state.controller.script.clone(),
                     state.current_idx,
                     state.controller.frame_count
                 );

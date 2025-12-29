@@ -20,6 +20,7 @@ impl<'a> ThreadState<'a> {
 pub struct ControllerState {
     pub indir: String,
     pub outdir: String,
+    pub script: String,
     
     pub frame_count: u32,
     pub frame_index: Mutex<u32>,
@@ -28,10 +29,11 @@ pub struct ControllerState {
 }
 
 impl ControllerState {
-    pub fn new(indir: String, outdir: String, frame_count: u32) -> Arc<Self> {
+    pub fn new(indir: String, outdir: String, script: String, frame_count: u32) -> Arc<Self> {
         let new = Arc::new(ControllerState {
             indir: indir,
             outdir: outdir,
+            script: script,
 
             frame_index: Mutex::new(0),
             frame_count: frame_count,
