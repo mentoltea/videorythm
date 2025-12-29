@@ -1,28 +1,8 @@
 use std::{ fs, io::{self, Write}, process };
+use super::converter::Converter;
 
-pub struct Decoder {
-    filepath: String,
-
-    working_directory: String,
-    output_directory: String,
-    use_cached: bool,
-
-    fps: u16,
-}
-
-impl Decoder {
-    pub fn new(filepath: String, working_directory: String, output_directory: String, use_cached: bool, fps: u16,) -> Self {
-        let new = Decoder {
-            filepath: filepath,
-            working_directory: working_directory,
-            output_directory: output_directory,
-            use_cached: use_cached,
-            fps: fps
-        };
-        return new;
-    }
-
-    pub fn decode(&self) -> Result<u32, String> {
+impl Converter {
+    pub fn decode(& mut self) -> Result<(), String> {
         if !fs::exists(self.working_directory.clone()).unwrap() {
             match fs::create_dir_all(self.working_directory.clone()) {
                 Ok(_) => {}
@@ -33,7 +13,7 @@ impl Decoder {
 
         let mut full_output_directory: String = String::new();
         full_output_directory.push_str(&self.working_directory);
-        full_output_directory.push_str(&self.output_directory);
+        full_output_directory.push_str(&self.decoder_output_directory);
 
         if !fs::exists(full_output_directory.clone()).unwrap() {
             match fs::create_dir(full_output_directory.clone()) {
@@ -64,11 +44,11 @@ impl Decoder {
             }
             can_use_cache = (self.fps == cache_fps) && cache_frames>0;
             if !can_use_cache {
-                println!("Cached result is not suitable, recomputation needed");
+                println!("[Decoder] Cached result is not suitable, recomputation needed");
             }
         }
 
-        if !can_use_cache || !self.use_cached {         
+        if !can_use_cache || !self.decoder_use_cached {         
             let mut ffmpeg_decompose_video_command = process::Command::new("ffmpeg");
             
             ffmpeg_decompose_video_command.arg("-y");
@@ -84,14 +64,19 @@ impl Decoder {
             
             ffmpeg_decompose_video_command.arg(ffmpeg_output_path);
             
-            println!("Decomposing video at {} fps...", self.fps);
+            println!("[Decoder] Decomposing video at {} fps...", self.fps);
             match ffmpeg_decompose_video_command.output() {
-                Ok(s) => {io::stdout().write_all(&s.stdout).unwrap();}
+                Ok(out) => {
+                    if !out.status.success() {
+                        io::stderr().write_all(&out.stderr).unwrap();
+                        return Err(String::from("Video decoder error"));
+                    }
+                }
                 Err(e) => {return Err(e.to_string());}
             }
             
             
-            println!("Extracting audio...");
+            println!("[Decoder] Extracting audio...");
             let mut ffmpeg_extract_audio_command = process::Command::new("ffmpeg");
             
             ffmpeg_extract_audio_command.arg("-y");
@@ -109,11 +94,16 @@ impl Decoder {
             ffmpeg_extract_audio_command.arg(ffmpeg_output_path); // copy audio without reencoding
 
             match ffmpeg_extract_audio_command.output() {
-                Ok(s) => {io::stdout().write_all(&s.stdout).unwrap();}
+                Ok(out) => {
+                    if !out.status.success() {
+                        io::stderr().write_all(&out.stderr).unwrap();
+                        return Err(String::from("Audio decoder error"));
+                    }
+                }
                 Err(e) => {return Err(e.to_string());}
             }
         } else {
-            println!("Using cached results");
+            println!("[Decoder] Using cached results");
             used_cache = true;
         }
 
@@ -134,12 +124,13 @@ impl Decoder {
             }
             frames = counter;
         }
+        self.frames = frames;
 
         let mut finished_flag_file = fs::File::create(finished_flag_path.clone()).unwrap();
 
         write!(finished_flag_file, "fps={}\n", self.fps).unwrap();
-        write!(finished_flag_file, "frames={}\n", frames).unwrap();
+        write!(finished_flag_file, "frames={}\n", self.frames).unwrap();
 
-        return Ok(frames);
+        return Ok(());
     }
 }
