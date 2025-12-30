@@ -1,5 +1,6 @@
-use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
-use mlua::{Lua, Table, UserData, UserDataFields, UserDataMethods, FromLua, Value};
+use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba, ColorType};
+use mlua::{Lua, UserData, UserDataFields, UserDataMethods, FromLua, Value};
+use super::lua_pixel::LuaPixel;
 
 #[derive(Clone)]
 pub struct LuaImage {
@@ -23,26 +24,27 @@ impl UserData for LuaImage {
 
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method("getPixel", 
-            |lua, this, (x, y): (u32, u32)| {
+            |_, this, (x, y): (u32, u32)| -> Result<LuaPixel, mlua::Error> {
                 let pixel = this.image.get_pixel(x, y);
                 let channels = pixel.channels();
 
-                let table = lua.create_table()?;
-                table.set("r", channels[0]).unwrap();
-                table.set("g", channels[1]).unwrap();
-                table.set("b", channels[2]).unwrap();
-                table.set("a", channels[3]).unwrap();
+                let luapixel = LuaPixel {
+                    r: channels[0],
+                    g: channels[1],
+                    b: channels[2],
+                    a: channels[3],
+                };
 
-                return Ok(table);
+                return Ok(luapixel);
             }
         );
 
         methods.add_method_mut("setPixel", 
-            |_, this: & mut LuaImage, (x, y, color): (u32, u32, Table)| {
-                let r = color.get("r").unwrap_or(0);
-                let g = color.get("g").unwrap_or(0);
-                let b = color.get("b").unwrap_or(0);
-                let a = color.get("a").unwrap_or(255);
+            |_, this: & mut LuaImage, (x, y, pixel): (u32, u32, LuaPixel)| {
+                let r = pixel.r;
+                let g = pixel.g;
+                let b = pixel.b;
+                let a = pixel.a;
 
                 let pixel = Rgba([r, g, b, a]);
                 this.image.put_pixel(x, y, pixel);
@@ -83,8 +85,25 @@ pub fn execute_script_on_image(script: String, original: DynamicImage, frame_ind
     // let edited_image = LuaImage {
     //     image: DynamicImage::new(original.width(), original.height(), original.color())
     // };
-
     lua.load_std_libs(mlua::StdLib::MATH).unwrap();
+
+    let pixel_constructor = lua.create_function(
+        |_, (r, g, b, a): (u8, u8, u8, u8)| {
+            let pixel = LuaPixel {r, g, b, a};
+            return Ok(pixel);
+        }
+    ).unwrap();
+    lua.globals().set("Pixel", pixel_constructor).unwrap();
+
+    let image_constructor = lua.create_function(
+        |_, (width, height): (u32, u32)| {
+            let image = LuaImage {
+                image: DynamicImage::new(width, height, ColorType::Rgba8)
+            };
+            return Ok(image);
+        }
+    ).unwrap();
+    lua.globals().set("Image", image_constructor).unwrap();
 
     lua.globals().set("original", original_image).unwrap();
     // lua.globals().set("edited", edited_image).unwrap();
