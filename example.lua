@@ -31,6 +31,16 @@ function blur(image, radius)
             r = outpixel.r * time + avg * (1 - time)
             g = outpixel.g * time + avg * (1 - time)
             b = outpixel.b * time + avg * (1 - time)
+
+            if frame_index%3 == 0 then
+                r = r * 1.1
+            end
+            if frame_index%3 == 1 then
+                g = g * 1.1
+            end
+            if frame_index%3 == 2 then
+                b = b * 1.1
+            end
             
             result:setPixel(x, y, Pixel(r, g, b, a))
         end

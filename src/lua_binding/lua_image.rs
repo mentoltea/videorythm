@@ -88,7 +88,12 @@ pub fn execute_script_on_image(script: String, original: DynamicImage, frame_ind
     lua.load_std_libs(mlua::StdLib::MATH).unwrap();
 
     let pixel_constructor = lua.create_function(
-        |_, (r, g, b, a): (u8, u8, u8, u8)| {
+        |_, (r, g, b, a): (u32, u32, u32, u32)| {
+            let r = r.clamp(0, 255) as u8;
+            let g = g.clamp(0, 255) as u8;
+            let b = b.clamp(0, 255) as u8;
+            let a = a.clamp(0, 255) as u8;
+
             let pixel = LuaPixel {r, g, b, a};
             return Ok(pixel);
         }
