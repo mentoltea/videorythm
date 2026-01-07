@@ -11,6 +11,7 @@ pub fn parse_command_line (args: &[String]) -> Result<Arguments, String> {
     let mut sciptfile: Option<String> = None;  
     let mut use_cached: Option<bool> = None;  
     let mut fps: Option<u16> = None;  
+    let mut threads: Option<u16> = None;  
     
 
     let pairs: Vec< ( &String, &String ) > = args
@@ -28,6 +29,11 @@ pub fn parse_command_line (args: &[String]) -> Result<Arguments, String> {
             "--input" | "-i" => { infile = Some(rhs.to_owned())},
             "--output" | "-o" => { outfile = Some(rhs.to_owned())},
             "--script" | "-s" => { sciptfile = Some(rhs.to_owned())},
+
+            "--threads" | "-t" => {
+                let num: u16 = rhs.parse().unwrap();
+                threads = Some(num);
+            },
 
             "--fps" => {
                 let num: u16 = rhs.parse().unwrap();
@@ -68,6 +74,8 @@ pub fn parse_command_line (args: &[String]) -> Result<Arguments, String> {
         
         use_cached: use_cached.unwrap_or(true),
         fps: fps.unwrap_or(30),
+
+        threads: threads.unwrap_or(0),
     };
 
     if !result.work_dir.ends_with("/") { result.work_dir.push('/');}

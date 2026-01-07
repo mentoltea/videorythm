@@ -1,6 +1,7 @@
 use crate::video::{converter};
 use crate::threader::state::ControllerState;
 use std::thread;
+use std::num::NonZero;
 use std::fs;
 
 #[derive(Debug, Clone)]
@@ -17,6 +18,8 @@ pub struct Arguments {
     
     pub use_cached: bool,
     pub fps: u16,
+
+    pub threads: u16,
 }
 
 
@@ -66,7 +69,10 @@ pub fn process_video(
 
     let threads_available = thread::available_parallelism().unwrap();
 
-    controller.start(threads_available);
+    let mut threads = NonZero::new(args.threads as usize).unwrap();
+    if threads.get() == 0 { threads = threads_available; }
+
+    controller.start(threads);
     
     controller.join();
 
