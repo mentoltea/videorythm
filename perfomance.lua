@@ -9,7 +9,7 @@ function main(image)
             avg = (pixel.r + pixel.g + pixel.b)/3
             result:setPixel(x, y, Pixel(avg, avg, avg, 255))
         end
-        print(x + 1, "/", width)
+        -- print(x + 1, "/", width)
     end
     return result
 end

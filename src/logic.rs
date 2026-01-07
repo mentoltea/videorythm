@@ -68,11 +68,12 @@ pub fn process_video(
     );
 
     let threads_available = thread::available_parallelism().unwrap();
+    let user_threads = NonZero::new(args.threads as usize);
 
-    let mut threads = NonZero::new(args.threads as usize).unwrap();
-    if threads.get() == 0 { threads = threads_available; }
-
-    controller.start(threads);
+    match user_threads {
+        Some(x) => controller.start(x),
+        None => controller.start(threads_available),
+    };
     
     controller.join();
 

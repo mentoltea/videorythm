@@ -1,5 +1,5 @@
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba, ColorType};
-use mlua::{Lua, UserData, UserDataFields, UserDataMethods, FromLua, Value};
+use mlua::{Lua, UserData, UserDataFields, UserDataRef, UserDataMethods, FromLua, Value};
 use super::lua_pixel::LuaPixel;
 
 #[derive(Clone)]
@@ -39,7 +39,7 @@ impl UserData for LuaImage {
         );
 
         methods.add_method_mut("setPixel", 
-            |_, this: & mut LuaImage, (x, y, pixel): (u32, u32, LuaPixel)| {
+            |_, this: & mut LuaImage, (x, y, pixel): (u32, u32, UserDataRef<LuaPixel>)| {
                 let r = pixel.r;
                 let g = pixel.g;
                 let b = pixel.b;
