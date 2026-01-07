@@ -2,3 +2,4 @@
 example*
 *.mp4
 !example.lua
+.vscode/

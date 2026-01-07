@@ -1,4 +1,4 @@
-use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba, ColorType};
+use image::{DynamicImage, GenericImage, GenericImageView, Rgba, ColorType};
 use mlua::{Lua, UserData, UserDataFields, UserDataMethods, FromLua, Value};
 use super::lua_pixel::LuaPixel;
 
@@ -26,8 +26,7 @@ impl UserData for LuaImage {
         methods.add_method("getPixel", 
             |_, this, (x, y): (u32, u32)| -> Result<LuaPixel, mlua::Error> {
                 let pixel = this.image.get_pixel(x, y);
-                let channels = pixel.channels();
-
+                let channels = pixel.0;
                 let luapixel = LuaPixel {
                     r: channels[0],
                     g: channels[1],
