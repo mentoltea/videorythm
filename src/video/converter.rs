@@ -19,7 +19,7 @@ impl Converter {
         filepath: String, 
         working_directory: String, 
 
-        output_directory: String, 
+        decoder_output_directory: String, 
         use_cached: bool, 
 
         encoder_input_directory: String,
@@ -30,7 +30,7 @@ impl Converter {
         let new = Converter {
             filepath: filepath,
             working_directory: working_directory,
-            decoder_output_directory: output_directory,
+            decoder_output_directory: decoder_output_directory,
             decoder_use_cached: use_cached,
             encoder_input_directory: encoder_input_directory,
             encoder_output_path: encoder_output_path,

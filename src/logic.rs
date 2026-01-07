@@ -3,28 +3,37 @@ use crate::threader::state::ControllerState;
 use std::thread;
 use std::fs;
 
+#[derive(Debug, Clone)]
+pub struct Arguments {
+    pub work_dir: String,
+    
+    pub original_dir: String,
+    pub edited_dir: String,
+    
+    pub input_file: String,
+    pub output_file: String,
+    
+    pub script_file: String,
+    
+    pub use_cached: bool,
+    pub fps: u16,
+}
+
 
 pub fn process_video(
-    infile: String,
-    outfile: String,
-    scriptfile: String,
-    work_dir: String,
-    indir: String,
-    outdir: String,
-    fps: u16,
-    use_cached: bool
+    args: Arguments
 ) {
     let mut converter = converter::Converter::new(
-        infile.clone(),
-        work_dir.clone(), 
+        args.input_file.clone(),
+        args.work_dir.clone(), 
         
-        indir.clone(), 
-        use_cached,
+        args.original_dir.clone(), 
+        args.use_cached,
 
-        outdir.clone(),
-        outfile.clone(),
+        args.edited_dir.clone(),
+        args.output_file.clone(),
 
-        fps,
+        args.fps,
     );
 
     match converter.decode() {
@@ -36,17 +45,17 @@ pub fn process_video(
         }
     }
 
-    let mut full_outdir = work_dir.clone();
-    full_outdir.push_str(&outdir);
+    let mut full_outdir = args.work_dir.clone();
+    full_outdir.push_str(&args.edited_dir);
     
     if !fs::exists(full_outdir.clone()).unwrap() {
         fs::create_dir_all(full_outdir.clone()).unwrap();
     }
 
-    let mut full_indir = work_dir.clone();
-    full_indir.push_str(&indir);
+    let mut full_indir = args.work_dir.clone();
+    full_indir.push_str(&args.original_dir);
 
-    let script: String = fs::read_to_string(scriptfile).unwrap();
+    let script: String = fs::read_to_string(args.script_file).unwrap();
 
     let controller = ControllerState::new(
         full_indir.clone(), 

@@ -2,29 +2,21 @@ mod video;
 mod image;
 mod threader;
 mod logic;
+mod cli;
 mod lua_binding;
 
+use std::{env};
+
 fn main() {
-    let work_dir = String::from("./example/");
+    let raw_args: Vec<String> = env::args().collect();
 
-    let indir = String::from("original_frames/");
-    let outdir = String::from("edited_frames/");
+    let args = cli::parse_command_line(&raw_args[1..]); 
+    if let Err(x) = args {
+        println!("Argument parsing error: {x}");
+        return;
+    }
 
-    let infile = String::from("./example.mp4");
-    let outfile = String::from("out.mp4");
-
-    let scriptfile = String::from("./example.lua");
-
-    let use_cached = true;
-    let fps = 30;
-
-    logic::process_video(
-        infile, outfile, scriptfile,
-        work_dir, 
-        indir, outdir, 
-        fps, 
-        use_cached
-    );
+    logic::process_video(args.unwrap());
     
     println!("Finished");
 }

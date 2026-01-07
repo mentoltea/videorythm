@@ -31,6 +31,7 @@ impl Converter {
         
         if fs::exists(finished_flag_path.clone()).unwrap() {
             let mut cache_fps: u16 = 0;
+            let mut decoder_output_dir = String::new();
             let finished_flag_content = fs::read_to_string(finished_flag_path.clone()).unwrap();
             for line in finished_flag_content.lines() {
                 if line.starts_with("fps=") {
@@ -41,8 +42,14 @@ impl Converter {
                     let frame_str = &line[7..];
                     cache_frames = frame_str.parse::<u32>().unwrap_or(0);
                 }
+                if line.starts_with("dir=") {
+                    let dir_str = &line[4..];
+                    decoder_output_dir = dir_str.to_owned();
+                }
             }
-            can_use_cache = (self.fps == cache_fps) && cache_frames>0;
+            can_use_cache = (self.fps == cache_fps) 
+                && cache_frames>0 
+                && (decoder_output_dir == self.decoder_output_directory);
             if !can_use_cache {
                 println!("[Decoder] Cached result is not suitable, recomputation needed");
             }
@@ -130,6 +137,7 @@ impl Converter {
 
         write!(finished_flag_file, "fps={}\n", self.fps).unwrap();
         write!(finished_flag_file, "frames={}\n", self.frames).unwrap();
+        write!(finished_flag_file, "dir={}\n", self.decoder_output_directory).unwrap();
 
         return Ok(());
     }
